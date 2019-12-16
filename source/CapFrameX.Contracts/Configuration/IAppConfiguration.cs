@@ -52,7 +52,9 @@
 
 		string ThirdMetric { get; set; }
 
-		string ComparisonContext { get; set; }
+		string ComparisonContextA { get; set; }
+
+		string ComparisonContextB { get; set; }
 
 		string RecordingListSortMemberPath { get; set; }
 

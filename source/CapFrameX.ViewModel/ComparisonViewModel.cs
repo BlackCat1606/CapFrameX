@@ -62,7 +62,8 @@ namespace CapFrameX.ViewModel
 		private bool _colorPickerVisibility;
 		private EMetric _selectedSecondaryMetric = EMetric.P1;
 		private EMetric _selectedThirdMetric = EMetric.P0dot2;
-		private EComparisonContext _selectedComparisonContext = EComparisonContext.DateTime;
+		private EComparisonContext _selectedComparisonContextA = EComparisonContext.DateTime;
+		private EComparisonContext _selectedComparisonContextB = EComparisonContext.None;
 		private string _currentGameName;
 		private bool _hasUniqueGameNames;
 		private bool _useComparisonGrouping;
@@ -83,8 +84,8 @@ namespace CapFrameX.ViewModel
 											  .ToArray();
 
 		public Array ComparisonContextItems => Enum.GetValues(typeof(EComparisonContext))
-												   .Cast<EComparisonContext>()
-												   .ToArray();
+													.Cast<EComparisonContext>()
+													.ToArray();
 
 		public ISubject<Unit> ResetLShapeChart = new Subject<Unit>();
 
@@ -119,14 +120,26 @@ namespace CapFrameX.ViewModel
 			}
 		}
 
-		public EComparisonContext SelectedComparisonContext
+		public EComparisonContext SelectedComparisonContextA
 		{
-			get { return _selectedComparisonContext; }
+			get { return _selectedComparisonContextA; }
 			set
 			{
-				_appConfiguration.ComparisonContext =
+				_appConfiguration.ComparisonContextA =
 					value.ConvertToString();
-				_selectedComparisonContext = value;
+				_selectedComparisonContextA = value;
+				RaisePropertyChanged();
+				OnComparisonContextChanged();
+			}
+		}
+		public EComparisonContext SelectedComparisonContextB
+		{
+			get { return _selectedComparisonContextB; }
+			set
+			{
+				_appConfiguration.ComparisonContextB =
+					value.ConvertToString();
+				_selectedComparisonContextB = value;
 				RaisePropertyChanged();
 				OnComparisonContextChanged();
 			}
@@ -427,7 +440,8 @@ namespace CapFrameX.ViewModel
 
 			ComparisonColumnChartFormatter = value => value.ToString(string.Format("F{0}",
 			_appConfiguration.FpsValuesRoundingDigits), CultureInfo.InvariantCulture);
-			SelectedComparisonContext = _appConfiguration.ComparisonContext.ConvertToEnum<EComparisonContext>();
+			SelectedComparisonContextA = _appConfiguration.ComparisonContextA.ConvertToEnum<EComparisonContext>();
+			SelectedComparisonContextB = _appConfiguration.ComparisonContextB.ConvertToEnum<EComparisonContext>();
 			SelectedSecondaryMetric = _appConfiguration.SecondaryMetric.ConvertToEnum<EMetric>();
 			SelectedThirdMetric = _appConfiguration.ThirdMetric.ConvertToEnum<EMetric>();
 
@@ -615,8 +629,35 @@ namespace CapFrameX.ViewModel
 
 		private void OnComparisonContextChanged()
 		{
-			switch (SelectedComparisonContext)
+			string blockA = string.Empty;
+			string blockB = string.Empty;
+
+			switch (SelectedComparisonContextA)
 			{
+				case EComparisonContext.DateTime:
+					OnDateTimeContext();
+					break;
+				case EComparisonContext.CPU:
+					OnCpuContext();
+					break;
+				case EComparisonContext.GPU:
+					OnGpuContex();
+					break;
+				case EComparisonContext.SystemRam:
+					OnSystemRamContex();
+					break;
+				case EComparisonContext.Custom:
+					OnCustomContex();
+					break;
+				default:
+					OnDateTimeContext();
+					break;
+			}
+			switch (SelectedComparisonContextB)
+			{
+				case EComparisonContext.None:
+					OnDateTimeContext();
+					break;
 				case EComparisonContext.DateTime:
 					OnDateTimeContext();
 					break;
@@ -638,6 +679,7 @@ namespace CapFrameX.ViewModel
 			}
 
 		}
+
 
 		private void OnRangeSliderChanged()
 		{
@@ -814,7 +856,7 @@ namespace CapFrameX.ViewModel
 
 			SetBarMaxValue();
 
-			switch (SelectedComparisonContext)
+			switch (SelectedComparisonContextA)
 			{
 				case EComparisonContext.DateTime:
 					SetLabelDateTimeContext();
@@ -878,7 +920,7 @@ namespace CapFrameX.ViewModel
 
 			if (IsContextLegendActive)
 			{
-				switch (SelectedComparisonContext)
+				switch (SelectedComparisonContextA)
 				{
 					case EComparisonContext.DateTime:
 						chartTitle = $"{wrappedComparisonInfo.WrappedRecordInfo.FileRecordInfo.CreationDate} " +

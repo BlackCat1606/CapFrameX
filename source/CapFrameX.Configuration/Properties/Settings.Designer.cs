@@ -326,12 +326,12 @@ namespace CapFrameX.Configuration.Properties {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("DateTime")]
-        public string ComparisonContext {
+        public string ComparisonContextA {
             get {
-                return ((string)(this["ComparisonContext"]));
+                return ((string)(this["ComparisonContextA"]));
             }
             set {
-                this["ComparisonContext"] = value;
+                this["ComparisonContextA"] = value;
             }
         }
         
@@ -464,6 +464,18 @@ namespace CapFrameX.Configuration.Properties {
             }
             set {
                 this["IsOverlayActive"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("None")]
+        public string ComparisonContextB {
+            get {
+                return ((string)(this["ComparisonContextB"]));
+            }
+            set {
+                this["ComparisonContextB"] = value;
             }
         }
     }

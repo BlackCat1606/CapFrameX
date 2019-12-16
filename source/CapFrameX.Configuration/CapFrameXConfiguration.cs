@@ -80,13 +80,13 @@ namespace CapFrameX.Configuration
 			set { Settings.UseSingleRecordP0Dot1QuantileStatisticParameter = value; Settings.Save(); }
 		}
 
-        public bool UseSingleRecordP0Dot2QuantileStatisticParameter
-        {
-            get { return Settings.UseSingleRecordP0Dot2QuantileStatisticParameter; }
-            set { Settings.UseSingleRecordP0Dot2QuantileStatisticParameter = value; Settings.Save(); }
-        }
+		public bool UseSingleRecordP0Dot2QuantileStatisticParameter
+		{
+			get { return Settings.UseSingleRecordP0Dot2QuantileStatisticParameter; }
+			set { Settings.UseSingleRecordP0Dot2QuantileStatisticParameter = value; Settings.Save(); }
+		}
 
-        public bool UseSingleRecordP1LowAverageStatisticParameter
+		public bool UseSingleRecordP1LowAverageStatisticParameter
 		{
 			get { return Settings.UseSingleRecordP1LowAverageStatisticParameter; }
 			set { Settings.UseSingleRecordP1LowAverageStatisticParameter = value; Settings.Save(); }
@@ -110,11 +110,11 @@ namespace CapFrameX.Configuration
 			set { Settings.UseSingleRecordAdaptiveSTDStatisticParameter = value; Settings.Save(); }
 		}
 
-        public string CaptureHotKey
-        {
-            get { return Settings.CaptureHotKey; }
-            set { Settings.CaptureHotKey = value; Settings.Save(); }
-        }
+		public string CaptureHotKey
+		{
+			get { return Settings.CaptureHotKey; }
+			set { Settings.CaptureHotKey = value; Settings.Save(); }
+		}
 
 		public string OverlayHotKey
 		{
@@ -128,25 +128,25 @@ namespace CapFrameX.Configuration
             set { Settings.HotkeySoundMode = value; Settings.Save(); }
         }
 
-        public int CaptureTime
-        {
-            get { return Settings.CaptureTime; }
-            set { Settings.CaptureTime = value; Settings.Save(); }
-        }
+		public int CaptureTime
+		{
+			get { return Settings.CaptureTime; }
+			set { Settings.CaptureTime = value; Settings.Save(); }
+		}
 
-        public double VoiceSoundLevel
-        {
-            get { return Settings.VoiceSoundLevel; }
-            set { Settings.VoiceSoundLevel = value; Settings.Save(); }
-        }
+		public double VoiceSoundLevel
+		{
+			get { return Settings.VoiceSoundLevel; }
+			set { Settings.VoiceSoundLevel = value; Settings.Save(); }
+		}
 
-        public double SimpleSoundLevel
-        {
-            get { return Settings.SimpleSoundLevel; }
-            set { Settings.SimpleSoundLevel = value; Settings.Save(); }
-        }
+		public double SimpleSoundLevel
+		{
+			get { return Settings.SimpleSoundLevel; }
+			set { Settings.SimpleSoundLevel = value; Settings.Save(); }
+		}
 
-		public string SecondaryMetric 
+		public string SecondaryMetric
 		{
 			get { return Settings.SecondaryMetric; }
 			set { Settings.SecondaryMetric = value; Settings.Save(); }
@@ -156,10 +156,15 @@ namespace CapFrameX.Configuration
 			get { return Settings.ThirdMetric; }
 			set { Settings.ThirdMetric = value; Settings.Save(); }
 		}
-		public string ComparisonContext
+		public string ComparisonContextA
 		{
-			get { return Settings.ComparisonContext; }
-			set { Settings.ComparisonContext = value; Settings.Save(); }
+			get { return Settings.ComparisonContextA; }
+			set { Settings.ComparisonContextA = value; Settings.Save(); }
+		}
+		public string ComparisonContextB
+		{
+			get { return Settings.ComparisonContextB; }
+			set { Settings.ComparisonContextB = value; Settings.Save(); }
 		}
 
 		public string RecordingListSortMemberPath

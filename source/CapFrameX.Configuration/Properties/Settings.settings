@@ -77,8 +77,11 @@
     <Setting Name="ThirdMetric" Type="System.String" Scope="User">
       <Value Profile="(Default)">P0dot1</Value>
     </Setting>
-    <Setting Name="ComparisonContext" Type="System.String" Scope="User">
+    <Setting Name="ComparisonContextA" Type="System.String" Scope="User">
       <Value Profile="(Default)">DateTime</Value>
+    </Setting>
+	<Setting Name="ComparisonContextB" Type="System.String" Scope="User">
+      <Value Profile="(Default)">None</Value>
     </Setting>
     <Setting Name="RecordingListSortMemberPath" Type="System.String" Scope="User">
       <Value Profile="(Default)">GameName</Value>

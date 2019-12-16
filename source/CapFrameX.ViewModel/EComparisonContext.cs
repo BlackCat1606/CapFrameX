@@ -3,7 +3,9 @@
 namespace CapFrameX.ViewModel
 {
     public enum EComparisonContext
-    {
+	{
+		[Description("None")]
+		None = 0,
 		[Description("Date and time")]
 		DateTime = 1,
 		[Description("CPU")]

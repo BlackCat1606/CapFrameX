@@ -20,7 +20,7 @@ namespace CapFrameX.ViewModel
 			}
 			else
 			{
-				switch (_selectedComparisonContext)
+				switch (_selectedComparisonContextA)
 				{
 					case EComparisonContext.DateTime:
 						SetLabelDateTimeContext();
@@ -186,6 +186,11 @@ namespace CapFrameX.ViewModel
 		{
 			if (!CheckDataConsistency())
 				return;
+
+			// Source: https://www.csharp-examples.net/align-string-with-spaces/
+			//To align string to the right or to the left use static method String.Format.
+			//To align string to the left(spaces on the right) use formatting patern with comma(,) followed by a negative number of characters: 
+			//String.Format(„{ 0,–10}“, text). To right alignment use a positive number: { 0,10}.
 
 			ComparisonRowChartLabels = ComparisonRecords.Select(record =>
 			{
