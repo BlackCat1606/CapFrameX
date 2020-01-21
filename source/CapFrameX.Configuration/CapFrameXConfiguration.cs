@@ -4,8 +4,6 @@ namespace CapFrameX.Configuration
 {
 	public class CapFrameXConfiguration : IAppConfiguration
 	{
-		public static IAppConfiguration Instance = new CapFrameXConfiguration();
-
 		private static Properties.Settings Settings => Properties.Settings.Default;
 
 		public int MovingAverageWindowSize
@@ -80,13 +78,13 @@ namespace CapFrameX.Configuration
 			set { Settings.UseSingleRecordP0Dot1QuantileStatisticParameter = value; Settings.Save(); }
 		}
 
-		public bool UseSingleRecordP0Dot2QuantileStatisticParameter
-		{
-			get { return Settings.UseSingleRecordP0Dot2QuantileStatisticParameter; }
-			set { Settings.UseSingleRecordP0Dot2QuantileStatisticParameter = value; Settings.Save(); }
-		}
+        public bool UseSingleRecordP0Dot2QuantileStatisticParameter
+        {
+            get { return Settings.UseSingleRecordP0Dot2QuantileStatisticParameter; }
+            set { Settings.UseSingleRecordP0Dot2QuantileStatisticParameter = value; Settings.Save(); }
+        }
 
-		public bool UseSingleRecordP1LowAverageStatisticParameter
+        public bool UseSingleRecordP1LowAverageStatisticParameter
 		{
 			get { return Settings.UseSingleRecordP1LowAverageStatisticParameter; }
 			set { Settings.UseSingleRecordP1LowAverageStatisticParameter = value; Settings.Save(); }
@@ -110,11 +108,11 @@ namespace CapFrameX.Configuration
 			set { Settings.UseSingleRecordAdaptiveSTDStatisticParameter = value; Settings.Save(); }
 		}
 
-		public string CaptureHotKey
-		{
-			get { return Settings.CaptureHotKey; }
-			set { Settings.CaptureHotKey = value; Settings.Save(); }
-		}
+        public string CaptureHotKey
+        {
+            get { return Settings.CaptureHotKey; }
+            set { Settings.CaptureHotKey = value; Settings.Save(); }
+        }
 
 		public string OverlayHotKey
 		{
@@ -128,43 +126,70 @@ namespace CapFrameX.Configuration
             set { Settings.HotkeySoundMode = value; Settings.Save(); }
         }
 
-		public int CaptureTime
+        public int CaptureTime
+        {
+            get { return Settings.CaptureTime; }
+            set { Settings.CaptureTime = value; Settings.Save(); }
+        }
+
+        public double VoiceSoundLevel
+        {
+            get { return Settings.VoiceSoundLevel; }
+            set { Settings.VoiceSoundLevel = value; Settings.Save(); }
+        }
+
+        public double SimpleSoundLevel
+        {
+            get { return Settings.SimpleSoundLevel; }
+            set { Settings.SimpleSoundLevel = value; Settings.Save(); }
+        }
+
+		public string SecondMetric 
 		{
-			get { return Settings.CaptureTime; }
-			set { Settings.CaptureTime = value; Settings.Save(); }
+			get { return Settings.SecondMetric; }
+			set { Settings.SecondMetric = value; Settings.Save(); }
 		}
 
-		public double VoiceSoundLevel
-		{
-			get { return Settings.VoiceSoundLevel; }
-			set { Settings.VoiceSoundLevel = value; Settings.Save(); }
-		}
-
-		public double SimpleSoundLevel
-		{
-			get { return Settings.SimpleSoundLevel; }
-			set { Settings.SimpleSoundLevel = value; Settings.Save(); }
-		}
-
-		public string SecondaryMetric
-		{
-			get { return Settings.SecondaryMetric; }
-			set { Settings.SecondaryMetric = value; Settings.Save(); }
-		}
 		public string ThirdMetric
 		{
 			get { return Settings.ThirdMetric; }
 			set { Settings.ThirdMetric = value; Settings.Save(); }
 		}
-		public string ComparisonContextA
+
+		public string SecondMetricOverlay
 		{
-			get { return Settings.ComparisonContextA; }
-			set { Settings.ComparisonContextA = value; Settings.Save(); }
+			get { return Settings.SecondMetricOverlay; }
+			set { Settings.SecondMetricOverlay = value; Settings.Save(); }
 		}
-		public string ComparisonContextB
+
+		public string ThirdMetricOverlay
 		{
-			get { return Settings.ComparisonContextB; }
-			set { Settings.ComparisonContextB = value; Settings.Save(); }
+			get { return Settings.ThirdMetricOverlay; }
+			set { Settings.ThirdMetricOverlay = value; Settings.Save(); }
+		}
+
+		public int SelectedHistoryRuns
+		{
+			get { return Settings.SelectedHistoryRuns; }
+			set { Settings.SelectedHistoryRuns = value; Settings.Save(); }
+		}
+
+		public string OutlierHandling
+		{
+			get { return Settings.OutlierHandling; }
+			set { Settings.OutlierHandling = value; Settings.Save(); }
+		}
+
+		public int OSDRefreshPeriod
+		{
+			get { return Settings.OSDRefreshPeriod; }
+			set { Settings.OSDRefreshPeriod = value; Settings.Save(); }
+		}
+
+		public string ComparisonContext
+		{
+			get { return Settings.ComparisonContext; }
+			set { Settings.ComparisonContext = value; Settings.Save(); }
 		}
 
 		public string RecordingListSortMemberPath
@@ -225,6 +250,70 @@ namespace CapFrameX.Configuration
 		{
 			get { return Settings.IsOverlayActive; }
 			set { Settings.IsOverlayActive = value; Settings.Save(); }
+		}
+
+		public string ResetHistoryHotkey
+		{
+			get { return Settings.ResetHistoryHotkey; }
+			set { Settings.ResetHistoryHotkey = value; Settings.Save(); }
+		}
+
+		public bool UseRunHistory
+		{
+			get { return Settings.UseRunHistory; }
+			set { Settings.UseRunHistory = value; Settings.Save(); }
+		}
+
+		public bool UseAggregation
+		{
+			get { return Settings.UseAggregation; }
+			set { Settings.UseAggregation = value; Settings.Save(); }
+		}
+
+		public bool SaveAggregationOnly
+		{
+			get { return Settings.SaveAggregationOnly; }
+			set { Settings.SaveAggregationOnly = value; Settings.Save(); }
+		}
+
+		public int OutlierPercentageOverlay
+		{
+			get { return Settings.OutlierPercentageOverlay; }
+			set { Settings.OutlierPercentageOverlay = value; Settings.Save(); }
+		}
+
+		public string RelatedMetricOverlay
+		{
+			get { return Settings.RelatedMetricOverlay; }
+			set { Settings.RelatedMetricOverlay = value; Settings.Save(); }
+		}
+
+		public int InputLagOffset
+		{
+			get { return Settings.InputLagOffset; }
+			set { Settings.InputLagOffset = value; Settings.Save(); }
+		}
+
+		public string SecondMetricAggregation
+		{
+			get { return Settings.SecondMetricAggregation; }
+			set { Settings.SecondMetricAggregation = value; Settings.Save(); }
+		}
+
+		public string ThirdMetricAggregation
+		{
+			get { return Settings.ThirdMetricAggregation; }
+			set { Settings.ThirdMetricAggregation = value; Settings.Save(); }
+		}
+		public string RelatedMetricAggregation
+		{
+			get { return Settings.RelatedMetricAggregation; }
+			set { Settings.RelatedMetricAggregation = value; Settings.Save(); }
+		}
+		public int OutlierPercentageAggregation
+		{
+			get { return Settings.OutlierPercentageAggregation; }
+			set { Settings.OutlierPercentageAggregation = value; Settings.Save(); }
 		}
 	}
 }

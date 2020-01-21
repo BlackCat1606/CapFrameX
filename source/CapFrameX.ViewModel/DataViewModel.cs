@@ -348,6 +348,7 @@ namespace CapFrameX.ViewModel
 			MessageDialogContent = new ContitionalMessageDialog();
 
 			InitializeStatisticParameter();
+			SetThresholdLabels();
 		}
 
 		partial void InitializeStatisticParameter();
@@ -401,7 +402,7 @@ namespace CapFrameX.ViewModel
 			StringBuilder builder = new StringBuilder();
 
 			// Vice versa!
-			// "Adaptive STD" ,"Min","0.1% Low" ,"0.1%","0.2%" ,"1% Low", "1%" ,"5%" ,"Average" ,"95%" ,"99%" ,"Max"
+			// "Adaptive STDEV" ,"Min","0.1% Low" ,"0.1%","0.2%" ,"1% Low", "1%" ,"5%" ,"Average" ,"95%" ,"99%" ,"Max"
 			if (_appConfiguration.UseSingleRecordMaxStatisticParameter)
 				builder.Append("Max" + "\t" + max.ToString(CultureInfo.InvariantCulture) + Environment.NewLine);
 			if (_appConfiguration.UseSingleRecord99QuantileStatisticParameter)
@@ -425,7 +426,7 @@ namespace CapFrameX.ViewModel
 			if (_appConfiguration.UseSingleRecordMinStatisticParameter)
 				builder.Append("Min" + "\t" + min.ToString(CultureInfo.InvariantCulture) + Environment.NewLine);
 			if (_appConfiguration.UseSingleRecordAdaptiveSTDStatisticParameter)
-				builder.Append("Adaptive STD" + "\t" + adaptiveStandardDeviation.ToString(CultureInfo.InvariantCulture) + Environment.NewLine);
+				builder.Append("Adaptive STDEV" + "\t" + adaptiveStandardDeviation.ToString(CultureInfo.InvariantCulture) + Environment.NewLine);
 
 			Clipboard.SetDataObject(builder.ToString(), false);
 		}
@@ -567,6 +568,7 @@ namespace CapFrameX.ViewModel
 
 				Task.Factory.StartNew(() => SetStaticChart(subset));
 				Task.Factory.StartNew(() => SetStutteringChart(subset));
+				Task.Factory.StartNew(() => SetFpsThresholdChart(subset));
 			}
 		}
 
@@ -604,6 +606,7 @@ namespace CapFrameX.ViewModel
 			{
 				Task.Factory.StartNew(() => SetStaticChart(subset));
 				Task.Factory.StartNew(() => SetStutteringChart(subset));
+				Task.Factory.StartNew(() => SetFpsThresholdChart(subset));
 			}
 		}
 
@@ -700,9 +703,9 @@ namespace CapFrameX.ViewModel
 
 				var parameterLabelList = new List<string>();
 
-				//{ "Adaptive STD", "Min", "0.1% Low", "0.1%", "0.2%", "1% Low", "1%", "5%", "Average", "95%", "99%", "Max" }
+				//{ "Adaptive STDEV", "Min", "0.1% Low", "0.1%", "0.2%", "1% Low", "1%", "5%", "Average", "95%", "99%", "Max" }
 				if (_appConfiguration.UseSingleRecordAdaptiveSTDStatisticParameter && !double.IsNaN(adaptiveStandardDeviation))
-					parameterLabelList.Add("Adaptive STD");
+					parameterLabelList.Add("Adaptive STDEV");
 				if (_appConfiguration.UseSingleRecordMinStatisticParameter)
 					parameterLabelList.Add("Min");
 				if (_appConfiguration.UseSingleRecordP0Dot1LowAverageStatisticParameter && !double.IsNaN(p0dot1_averageLow))
@@ -744,7 +747,7 @@ namespace CapFrameX.ViewModel
 					new PieSeries
 					{
 						Title = "Smooth time (s)",
-						Values = new ChartValues<double>(){ Math.Round((1 - stutteringTimePercentage / 100) * frametimes.Sum(), 0)/1000 },
+						Values = new ChartValues<double>(){ Math.Round((1 - stutteringTimePercentage / 100) * frametimes.Skip(1).Sum() / 1000, 2) },
 						DataLabels = true,
 						Fill = ColorRessource.PieChartSmmoothFill,
 						Foreground = Brushes.Black,
@@ -754,7 +757,7 @@ namespace CapFrameX.ViewModel
 					new PieSeries
 					{
 						Title = "Stuttering time (s)",
-						Values = new ChartValues<double>(){ Math.Round(stutteringTimePercentage / 100 * frametimes.Sum()) / 1000 },
+						Values = new ChartValues<double>(){ Math.Round(stutteringTimePercentage / 100 * frametimes.Skip(1).Sum() / 1000, 2) },
 						DataLabels = true,
 						Fill = ColorRessource.PieChartStutterFill,
 						Foreground = Brushes.Black,

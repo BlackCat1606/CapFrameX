@@ -1,7 +1,5 @@
-
-// RTSSSharedMemorySampleDlg.cpp : implementation file
-//
-// created by Unwinder
+/////////////////////////////////////////////////////////////////////////////
+// created by Unwinder - modified by ZeroStrat
 /////////////////////////////////////////////////////////////////////////////
 #include "stdafx.h"
 #include "RTSSSharedMemory.h"
@@ -11,6 +9,7 @@
 #include <shlwapi.h>
 #include <float.h>
 #include <io.h>
+
 /////////////////////////////////////////////////////////////////////////////
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -21,6 +20,10 @@ static char THIS_FILE[] = __FILE__;
 RTSSCoreControl::RTSSCoreControl()
 {
   m_strInstallPath = "";
+
+  RunHistory.push_back("N/A");
+  RunHistory.push_back("N/A");
+  RunHistory.push_back("N/A");
 
   m_bMultiLineOutput = TRUE;
   m_bFormatTags = TRUE;
@@ -83,11 +86,12 @@ DWORD RTSSCoreControl::EmbedGraph(DWORD dwOffset, FLOAT* lpBuffer, DWORD dwBuffe
 
             if (dwPass)
             {
+              // RTSSSharedMemorySample
               if (!strlen(pEntry->szOSDOwner))
-                strcpy_s(pEntry->szOSDOwner, sizeof(pEntry->szOSDOwner), "RTSSSharedMemorySample");
+                strcpy_s(pEntry->szOSDOwner, sizeof(pEntry->szOSDOwner), "CapFrameX");
             }
 
-            if (!strcmp(pEntry->szOSDOwner, "RTSSSharedMemorySample"))
+            if (!strcmp(pEntry->szOSDOwner, "CapFrameX"))
             {
               if (pMem->dwVersion >= 0x0002000c)
                 //embedded graphs are supported for v2.12 and higher shared memory
@@ -172,16 +176,16 @@ BOOL RTSSCoreControl::UpdateOSD(LPCSTR lpText)
             //allow primary OSD clients (i.e. EVGA Precision / MSI Afterburner) to use the first slot exclusively, so third party
             //applications start scanning the slots from the second one
           {
-            RTSS_SHARED_MEMORY::LPRTSS_SHARED_MEMORY_OSD_ENTRY pEntry = 
+            RTSS_SHARED_MEMORY::LPRTSS_SHARED_MEMORY_OSD_ENTRY pEntry =
               (RTSS_SHARED_MEMORY::LPRTSS_SHARED_MEMORY_OSD_ENTRY)((LPBYTE)pMem + pMem->dwOSDArrOffset + dwEntry * pMem->dwOSDEntrySize);
 
             if (dwPass)
             {
               if (!strlen(pEntry->szOSDOwner))
-                strcpy_s(pEntry->szOSDOwner, sizeof(pEntry->szOSDOwner), "RTSSSharedMemorySample");
+                strcpy_s(pEntry->szOSDOwner, sizeof(pEntry->szOSDOwner), "CapFrameX");
             }
 
-            if (!strcmp(pEntry->szOSDOwner, "RTSSSharedMemorySample"))
+            if (!strcmp(pEntry->szOSDOwner, "CapFrameX"))
             {
               if (pMem->dwVersion >= 0x00020007)
                 //use extended text slot for v2.7 and higher shared memory, it allows displaying 4096 symbols
@@ -249,7 +253,7 @@ void RTSSCoreControl::ReleaseOSD()
         {
           RTSS_SHARED_MEMORY::LPRTSS_SHARED_MEMORY_OSD_ENTRY pEntry = (RTSS_SHARED_MEMORY::LPRTSS_SHARED_MEMORY_OSD_ENTRY)((LPBYTE)pMem + pMem->dwOSDArrOffset + dwEntry * pMem->dwOSDEntrySize);
 
-          if (!strcmp(pEntry->szOSDOwner, "RTSSSharedMemorySample"))
+          if (!strcmp(pEntry->szOSDOwner, "CapFrameX"))
           {
             memset(pEntry, 0, pMem->dwOSDEntrySize);
             pMem->dwOSDFrame++;
@@ -344,7 +348,7 @@ void RTSSCoreControl::Refresh()
   //init max OSD text size, we'll use extended text slot for v2.7 and higher shared memory, 
   //it allows displaying 4096 symbols /instead of 256 for regular text slot
 
-  DWORD dwMaxTextSize = (dwSharedMemoryVersion >= 0x00020007) ? sizeof(RTSS_SHARED_MEMORY::RTSS_SHARED_MEMORY_OSD_ENTRY().szOSDEx) 
+  DWORD dwMaxTextSize = (dwSharedMemoryVersion >= 0x00020007) ? sizeof(RTSS_SHARED_MEMORY::RTSS_SHARED_MEMORY_OSD_ENTRY().szOSDEx)
     : sizeof(RTSS_SHARED_MEMORY::RTSS_SHARED_MEMORY_OSD_ENTRY().szOSD);
 
   CGroupedString groupedString(dwMaxTextSize - 1);
@@ -361,8 +365,13 @@ void RTSSCoreControl::Refresh()
   if (bFormatTagsSupported && m_bFormatTags)
   {
     if (GetClientsNum() == 1)
-      strOSD += "<P=0,10>";
-    //move to position 0,10 (in zoomed pixel units)
+      strOSD += "<P=0,0>";
+    else
+    {
+      // Add CX label
+      groupedString.Add("", "<C3>\nCX OSD<C>", "\n", " ");
+    }
+    //move to position 0,0 (in zoomed pixel units)
 
     //Note: take a note that position is specified in absolute coordinates so use this tag with caution because your text may
     //overlap with text slots displayed by other applications, so in this demo we explicitly disable this tag usage if more than
@@ -378,6 +387,12 @@ void RTSSCoreControl::Refresh()
     //define color variable C[1] as R=FF,G=00 and B=A0
     strOSD += "<C2=FFFFFF>";
     //define color variable C[1] as R=FF,G=FF and B=FF
+    // CX blue
+    strOSD += "<C3=2297F3>";
+    //define color variable C[1] as R=FF,G=FF and B=FF
+    // CX orange
+    strOSD += "<C4=F17D20>";
+    //define color variable C[1] as R=FF,G=FF and B=FF
     strOSD += "<S0=-50>";
     //define size variable S[0] as 50% subscript (positive is superscript, negative is subscript)
     strOSD += "<S1=50>";
@@ -392,25 +407,69 @@ void RTSSCoreControl::Refresh()
   else
     strOSD = "";
 
-  // Add CX label
-  groupedString.Add("CX OSD", "", "\n", " ");
-
-  if (bFormatTagsSupported && m_bFormatTags)
+  if (OverlayEntries.size() > 0)
   {
-    groupedString.Add("<A0><FR><A><A1><S1> FPS<S><A>", "<C2><APP><C>", "\n", m_bFormatTags ? " " : ", ");
-    groupedString.Add("<A0><FT><A><A1><S1> ms<S><A>", "<C2><APP><C>", "\n", m_bFormatTags ? " " : ", ");
-    //print application-specific 3D API, framerate and frametime using tags
-  }
-  else
-  {
-    groupedString.Add("%FRAMERATE%", "", "\n");
-    groupedString.Add("%FRAMETIME%", "", "\n");
-    //print application-specific 3D API, framerate and frametime using deprecated macro
+    try
+    {
+      for (size_t i = 0; i < OverlayEntries.size(); i++)
+      {
+        AddOverlayEntry(&groupedString, &OverlayEntries[i], bFormatTagsSupported);
+      }
+    }
+    // ToDo: error info?
+    catch(const std::exception & e){}
   }
 
   BOOL bTruncated = FALSE;
 
   strOSD += groupedString.Get(bTruncated, FALSE, m_bFormatTags ? "\t" : " \t: ");
+
+  // manage graphs
+
+  if (OverlayEntries.size() > 0)
+  {
+    strOSD += "\n";
+
+    DWORD dwObjectOffset = 0;
+    DWORD dwObjectSize = 0;
+    DWORD dwFlags = 0;
+    CString strObj;
+
+    for (size_t i = 0; i < OverlayEntries.size(); i++)
+    {
+      if (OverlayEntries[i].ShowGraph)
+      {
+        if (OverlayEntries[i].Identifier == "Framerate")
+        {
+          //embed framerate graph object into the buffer
+          dwObjectSize = EmbedGraph(dwObjectOffset, NULL, 0, 0, -32, -2, 1, 0.0f, 200.0f, dwFlags | RTSS_EMBEDDED_OBJECT_GRAPH_FLAG_FRAMERATE);
+
+          if (dwObjectSize)
+          {
+            strObj.Format("<C2><OBJ=%08X><A0><S1><FR><A> FPS<S><C>\n", dwObjectOffset);
+            //print embedded object
+            strOSD += strObj;
+            //modify object offset
+            dwObjectOffset += dwObjectSize;
+          }
+        }
+        else if (OverlayEntries[i].Identifier == "Frametime")
+        {
+          //embed frametime graph object into the buffer
+          dwObjectSize = EmbedGraph(dwObjectOffset, NULL, 0, 0, -32, -2, 1, 0.0f, 50000.0f, dwFlags | RTSS_EMBEDDED_OBJECT_GRAPH_FLAG_FRAMETIME);
+
+          if (dwObjectSize)
+          {
+            strObj.Format("<C2><OBJ=%08X><A0><S1><FT><A> ms<S><C>\n", dwObjectOffset);
+            //print embedded object
+            strOSD += strObj;
+            //modify object offset
+            dwObjectOffset += dwObjectSize;
+          }
+        }
+      }
+    }
+  }
 
   if (!strOSD.IsEmpty())
   {
@@ -418,63 +477,107 @@ void RTSSCoreControl::Refresh()
     m_bConnected = bResult;
   }
 }
-/////////////////////////////////////////////////////////////////////////////
-BOOL RTSSCoreControl::PreTranslateMessage(MSG* pMsg)
+
+void RTSSCoreControl::AddOverlayEntry(CGroupedString* groupedString, OverlayEntry* entry, BOOL bFormatTagsSupported)
 {
-  if (pMsg->message == WM_KEYDOWN)
+  // handle special cases first
+  // ToDo when more special cases: better use switch-case with string/index mapping table
+  if (entry->Identifier == "RunHistory")
   {
-    switch (pMsg->wParam)
+    if (entry->ShowOnOverlay)
     {
-    case 'F':
-      if (m_bConnected)
+      for (int i = 0; i < RunHistory.size(); i++)
       {
-        m_bFormatTags = !m_bFormatTags;
-        Refresh();
+        CString strGroup;
+        strGroup.Format("<C2>Run %d: <C>", i + 1);
+
+        if (RunHistoryOutlierFlags.size() == RunHistory.size())
+        {
+          if (!RunHistoryOutlierFlags[i])
+            groupedString->Add("<C3> " + RunHistory[i] + "<C>", strGroup, "\n");
+          else
+            groupedString->Add("<C=C80000> " + RunHistory[i] + "<C>", strGroup, "\n");
+        }
+        else
+        {
+          groupedString->Add("<C3> " + RunHistory[i] + "<C>", strGroup, "\n");
+        }
       }
-      break;
-    case 'I':
-      if (m_bConnected)
+
+      // add aggregation
+      if (RunHistoryAggregation != "")
       {
-        m_bFillGraphs = !m_bFillGraphs;
-        Refresh();
+        groupedString->Add("<C3> " + RunHistoryAggregation + "<C>", "<C2>Result: <C>", "\n");
       }
-      break;
-    case ' ':
-      if (m_bConnected)
+    }
+  }
+  else if (entry->Identifier == "CaptureServiceStatus")
+  {
+    if (entry->ShowOnOverlay)
+    {
+      CString groupName = entry->GroupName;
+
+      if (groupName != "")
       {
-        m_bMultiLineOutput = !m_bMultiLineOutput;
-        Refresh();
+        groupName = "<C2>" + groupName + " <C>";
+        groupedString->Add("<A=0><C3> " + entry->Value + "<C><A>", groupName, "\n", " ");
       }
       else
       {
-       /* if (!m_strInstallPath.IsEmpty())
-          ShellExecute(GetSafeHwnd(), "open", m_strInstallPath, NULL, NULL, SW_SHOWNORMAL);*/
+        groupedString->Add("<A=0><C3>" + entry->Value + "<C><A>", groupName, "\n", " ");
+      }      
+    }
+  }
+  else if (entry->Identifier == "Framerate")
+  {
+    if (entry->ShowOnOverlay)
+    {
+      if (bFormatTagsSupported && m_bFormatTags)
+      {
+        groupedString->Add("<A=-4><C4><FR><C><A><A1><S1><C4> FPS<C><S><A>", "<C2><APP> <C>", "\n", m_bFormatTags ? " " : ", ");
+        //print application-specific 3D API, framerate and frametime using tags
       }
-      return TRUE;
-    case VK_UP:
-      IncProfileProperty("", "PositionY", -1);
-      return TRUE;
-    case VK_DOWN:
-      IncProfileProperty("", "PositionY", +1);
-      return TRUE;
-    case VK_LEFT:
-      IncProfileProperty("", "PositionX", -1);
-      return TRUE;
-    case VK_RIGHT:
-      IncProfileProperty("", "PositionX", +1);
-      return TRUE;
-    case 'R':
-      SetProfileProperty("", "BaseColor", 0xFF0000);
-      return TRUE;
-    case 'G':
-      SetProfileProperty("", "BaseColor", 0x00FF00);
-      return TRUE;
-    case 'B':
-      SetProfileProperty("", "BaseColor", 0x0000FF);
-      return TRUE;
+      else
+      {
+        groupedString->Add("%FRAMERATE%", "", "\n");
+        //print application-specific 3D API, framerate and frametime using deprecated macro
+      }
+    }
+  }
+  else if (entry->Identifier == "Frametime")
+  {
+    if (entry->ShowOnOverlay)
+    {
+      if (bFormatTagsSupported && m_bFormatTags)
+      {
+        groupedString->Add("<A=-4><C4><FT><C><A><A1><S1><C4> ms<C><S><A>", "<C2><APP> <C>", "\n", m_bFormatTags ? " " : ", ");
+        //print application-specific 3D API, framerate and frametime using tags
+      }
+      else
+      {
+        groupedString->Add("%FRAMETIME%", "", "\n");
+        //print application-specific 3D API, framerate and frametime using deprecated macro
+      }
+    }
+  }
+  else
+  {
+    if (entry->ShowOnOverlay)
+    {
+      CString groupName = entry->GroupName;
+      CString value = entry->Value;
+
+      if (groupName != "")
+      {
+        groupName = "<C2>" + groupName + " <C>";
+        groupedString->Add("<C4> " + value + "<C>", groupName, "\n", " ");
+      }
+      else
+        groupedString->Add("<C4>" + value + "<C>", groupName, "\n", " ");
     }
   }
 }
+
 /////////////////////////////////////////////////////////////////////////////
 void RTSSCoreControl::IncProfileProperty(LPCSTR lpProfile, LPCSTR lpProfileProperty, LONG dwIncrement)
 {

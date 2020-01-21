@@ -2,6 +2,7 @@
 using CapFrameX.Data;
 using CapFrameX.Overlay;
 using CapFrameX.PresentMonInterface;
+using CapFrameX.Statistics;
 using CapFrameX.ViewModel;
 using Prism.Events;
 using System.ComponentModel;
@@ -19,11 +20,16 @@ namespace CapFrameX.View
 		{
 			InitializeComponent();
 
-            if (DesignerProperties.GetIsInDesignMode(this))
+			if (DesignerProperties.GetIsInDesignMode(this))
 			{
 				var appConfiguration = new CapFrameXConfiguration();
-				DataContext = new StateViewModel( new RecordDirectoryObserver(appConfiguration), 
-					new EventAggregator(), appConfiguration, new PresentMonCaptureService(), new OverlayService());
+				var statisticProvider = new FrametimeStatisticProvider(appConfiguration);
+				var recordDirectoryObserver = new RecordDirectoryObserver(appConfiguration);
+				var recordDataProvider = new RecordDataProvider(recordDirectoryObserver, appConfiguration);
+				var overlayEntryProvider = new OverlayEntryProvider();
+				DataContext = new StateViewModel(new RecordDirectoryObserver(appConfiguration),
+					new EventAggregator(), appConfiguration, new PresentMonCaptureService(),
+					new OverlayService(statisticProvider, recordDataProvider, overlayEntryProvider, appConfiguration));
 			}
 		}
 

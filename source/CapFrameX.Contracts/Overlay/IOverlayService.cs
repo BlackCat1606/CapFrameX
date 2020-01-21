@@ -7,16 +7,38 @@ namespace CapFrameX.Contracts.Overlay
 	{
 		Subject<bool> IsOverlayActiveStream { get; }
 
+		string SecondMetric { get; set; }
+
+		string ThirdMetric { get; set; }
+
+		int RunHistoryCount { get; }
+
 		void ShowOverlay();
 
-		void ReleaseOverlay();
+		void HideOverlay();
 
-		void SetOverlayHeader(IList<string> entries);
+		void UpdateRefreshRate(int milliSeconds);
 
-		void StartCountDown(int seconds);
+		void UpdateNumberOfRuns(int numberOfRuns);
 
-		void StartTimer();
+		void SetCaptureTimerValue(int t);
 
-		void StopTimer();
+		void StartCountdown(int seconds);
+
+		void StartCaptureTimer();
+
+		void StopCaptureTimer();
+
+		void SetCaptureServiceStatus(string status);
+
+		void SetShowRunHistory(bool showHistory);
+
+		void ResetHistory();
+
+		void AddRunToHistory(List<string> captureData);
+
+		void SetRunHistoryAggregation(string aggregation);
+
+		void UpdateOverlayEntries();
 	}
 }

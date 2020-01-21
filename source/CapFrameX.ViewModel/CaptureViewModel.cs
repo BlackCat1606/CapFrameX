@@ -6,6 +6,7 @@ using CapFrameX.Data;
 using CapFrameX.EventAggregation.Messages;
 using CapFrameX.Hotkey;
 using CapFrameX.PresentMonInterface;
+using CapFrameX.Statistics;
 using Gma.System.MouseKeyHook;
 using OxyPlot;
 using OxyPlot.Axes;
@@ -33,7 +34,7 @@ namespace CapFrameX.ViewModel
 	public partial class CaptureViewModel : BindableBase, INavigationAware
 	{
 		private const int PRESICE_OFFSET = 2500;
-		private const int ARCHIVE_LENGTH = 1000;
+		private const int ARCHIVE_LENGTH = 500;
 
 		[DllImport("Kernel32.dll")]
 		private static extern bool QueryPerformanceCounter(out long lpPerformanceCount);
@@ -43,6 +44,7 @@ namespace CapFrameX.ViewModel
 		private readonly IEventAggregator _eventAggregator;
 		private readonly IRecordDataProvider _recordDataProvider;
 		private readonly IOverlayService _overlayService;
+		private readonly IStatisticProvider _statisticProvider;
 		private readonly MediaPlayer _soundPlayer = new MediaPlayer();
 		private readonly string[] _soundModes = new[] { "none", "simple sounds", "voice response" };
 		private readonly List<string> _captureDataArchive = new List<string>(ARCHIVE_LENGTH);
@@ -59,7 +61,6 @@ namespace CapFrameX.ViewModel
 		private string _captureTimeString = "0";
 		private string _captureStartDelayString = "0";
 		private IKeyboardMouseEvents _globalCaptureHookEvent;
-		private IKeyboardMouseEvents _globalOverlayHookEvent;
 		private string _selectedSoundMode;
 		private string _loggerOutput = string.Empty;
 		private bool _fillArchive = false;
@@ -72,6 +73,7 @@ namespace CapFrameX.ViewModel
 		private long _timestampStartCapture;
 		private long _timestampStopCapture;
 		private bool _dataOffsetRunning;
+		private string _lastCapturedProcess;
 
 		private bool IsCapturing
 		{
@@ -80,16 +82,6 @@ namespace CapFrameX.ViewModel
 			{
 				_isCapturing = value;
 				_captureService.IsCaptureModeActiveStream.OnNext(value);
-			}
-		}
-
-		private bool IsOverlayActive
-		{
-			get { return _appConfiguration.IsOverlayActive; }
-			set
-			{
-				_appConfiguration.IsOverlayActive = value;
-				_overlayService.IsOverlayActiveStream.OnNext(value);
 			}
 		}
 
@@ -168,20 +160,6 @@ namespace CapFrameX.ViewModel
 				_appConfiguration.CaptureHotKey = value;
 				UpdateCaptureStateInfo();
 				UpdateGlobalCaptureHookEvent();
-				RaisePropertyChanged();
-			}
-		}
-
-		public string OverlayHotkeyString
-		{
-			get { return _appConfiguration.OverlayHotKey; }
-			set
-			{
-				if (!CXHotkey.IsValidHotkey(value))
-					return;
-
-				_appConfiguration.OverlayHotKey = value;
-				UpdateGlobalOverlayHookEvent();
 				RaisePropertyChanged();
 			}
 		}
@@ -291,13 +269,15 @@ namespace CapFrameX.ViewModel
 								ICaptureService captureService,
 								IEventAggregator eventAggregator,
 								IRecordDataProvider recordDataProvider,
-								IOverlayService overlayService)
+								IOverlayService overlayService,
+								IStatisticProvider statisticProvider)
 		{
 			_appConfiguration = appConfiguration;
 			_captureService = captureService;
 			_eventAggregator = eventAggregator;
 			_recordDataProvider = recordDataProvider;
 			_overlayService = overlayService;
+			_statisticProvider = statisticProvider;
 
 			AddToIgonreListCommand = new DelegateCommand(OnAddToIgonreList);
 			AddToProcessListCommand = new DelegateCommand(OnAddToProcessList);
@@ -307,27 +287,20 @@ namespace CapFrameX.ViewModel
 			SelectedSoundMode = _appConfiguration.HotkeySoundMode;
 			CaptureTimeString = _appConfiguration.CaptureTime.ToString();
 
-			OverlayHotkeyString = _appConfiguration.OverlayHotKey.ToString();
-
 			ProcessesToIgnore.AddRange(CaptureServiceConfiguration.GetProcessIgnoreList());
 			_disposableHeartBeat = GetListUpdatHeartBeat();
 			_frametimeStream = new Subject<string>();
 
-			Task.Factory.StartNew(() =>
-			{
-				Console.WriteLine("bla");
-			});
-
 			SubscribeToUpdateProcessIgnoreList();
 			SubscribeToGlobalCaptureHookEvent();
-			SubscribeToGlobalOverlayHookEvent();
 
-			StartCaptureService();
-			if (IsOverlayActive)
-				_overlayService.ShowOverlay();
+			bool captureServiceStarted = StartCaptureService();
+
+			if (captureServiceStarted)
+				_overlayService.SetCaptureServiceStatus("Capture service ready...");
+
 
 			_captureService.IsCaptureModeActiveStream.OnNext(false);
-			_overlayService.IsOverlayActiveStream.OnNext(_appConfiguration.IsOverlayActive);
 
 			FrametimeModel = new PlotModel
 			{
@@ -418,26 +391,12 @@ namespace CapFrameX.ViewModel
 			SetGlobalHookEventCaptureHotkey();
 		}
 
-		private void SubscribeToGlobalOverlayHookEvent()
-		{
-			SetGlobalHookEventOverlayHotkey();
-		}
-
 		private void UpdateGlobalCaptureHookEvent()
 		{
 			if (_globalCaptureHookEvent != null)
 			{
 				_globalCaptureHookEvent.Dispose();
 				SetGlobalHookEventCaptureHotkey();
-			}
-		}
-
-		private void UpdateGlobalOverlayHookEvent()
-		{
-			if (_globalOverlayHookEvent != null)
-			{
-				_globalOverlayHookEvent.Dispose();
-				SetGlobalHookEventOverlayHotkey();
 			}
 		}
 
@@ -457,23 +416,6 @@ namespace CapFrameX.ViewModel
 
 			_globalCaptureHookEvent = Hook.GlobalEvents();
 			_globalCaptureHookEvent.OnCombination(onCombinationDictionary);
-		}
-
-		private void SetGlobalHookEventOverlayHotkey()
-		{
-			if (!CXHotkey.IsValidHotkey(OverlayHotkeyString))
-				return;
-
-			var onCombinationDictionary = new Dictionary<Combination, Action>
-			{
-				{Combination.FromString(OverlayHotkeyString), () =>
-				{
-					SetOverlayMode();
-				}}
-			};
-
-			_globalOverlayHookEvent = Hook.GlobalEvents();
-			_globalOverlayHookEvent.OnCombination(onCombinationDictionary);
 		}
 
 		private void SetCaptureMode()
@@ -496,6 +438,11 @@ namespace CapFrameX.ViewModel
 
 			if (!IsCapturing)
 			{
+				if (SelectedProcessToCapture != null)
+					_lastCapturedProcess = SelectedProcessToCapture;
+				else
+					_lastCapturedProcess = ProcessesToCapture.FirstOrDefault();
+
 				_ = QueryPerformanceCounter(out long startCounter);
 				AddLoggerEntry($"Performance counter on start capturing: {startCounter}");
 				_qpcTimeStart = startCounter;
@@ -562,34 +509,28 @@ namespace CapFrameX.ViewModel
 
 				var context = TaskScheduler.FromCurrentSynchronizationContext();
 
-				// offset timer
 				CaptureStateInfo = "Creating capture file...";
+				_overlayService.StopCaptureTimer();
+				_overlayService.SetCaptureServiceStatus("Processing data");
+
+				// offset timer
 				Task.Run(async () =>
 				{
 					await SetTaskDelayOffset().ContinueWith(_ =>
 					{
 						Application.Current.Dispatcher.Invoke(new Action(() =>
 						{
-							FinishCapturingAndUpdateUi();						
+							FinishCapturingAndUpdateUi();
 						}));
 					}, CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, context);
 				});
 			}
 		}
 
-		private void SetOverlayMode()
-		{
-			IsOverlayActive = !IsOverlayActive;
-
-			if (IsOverlayActive)
-				_overlayService.ShowOverlay();
-			else
-				_overlayService.ReleaseOverlay();
-		}
-
 		private void StartCaptureDataFromStream()
 		{
 			AddLoggerEntry("Capturing started.");
+			_overlayService.SetCaptureServiceStatus("Recording frametimes");
 
 			_captureData = new List<string>();
 			bool autoTermination = Convert.ToInt32(CaptureTimeString) > 0;
@@ -624,6 +565,8 @@ namespace CapFrameX.ViewModel
 			{
 				AddLoggerEntry("Starting countdown...");
 
+				// Start overlay countdown timer
+				_overlayService.StartCountdown(Convert.ToInt32(CaptureTimeString));
 				_cancellationTokenSource = new CancellationTokenSource();
 
 				// data timer
@@ -648,6 +591,10 @@ namespace CapFrameX.ViewModel
 							// turn locking on 
 							_dataOffsetRunning = true;
 							CaptureStateInfo = "Creating capture file...";
+
+							// update overlay
+							_overlayService.SetCaptureServiceStatus("Processing data");
+
 							// none -> do nothing
 							// simple sounds
 							if (SelectedSoundMode == _soundModes[1])
@@ -667,6 +614,8 @@ namespace CapFrameX.ViewModel
 					}, _cancellationTokenSource.Token, TaskContinuationOptions.ExecuteSynchronously, context);
 				});
 			}
+			else
+				_overlayService.StartCaptureTimer();
 		}
 
 		private void FinishCapturingAndUpdateUi()
@@ -681,6 +630,7 @@ namespace CapFrameX.ViewModel
 			_disposableHeartBeat = GetListUpdatHeartBeat();
 			IsAddToIgnoreListButtonActive = true;
 			UpdateCaptureStateInfo();
+			_overlayService.SetCaptureServiceStatus("Capture service ready...");	
 		}
 
 		private async Task SetTaskDelayOffset()
@@ -700,14 +650,17 @@ namespace CapFrameX.ViewModel
 				1000 * Convert.ToInt32(CaptureTimeString)));
 		}
 
-		private void StartCaptureService()
+		private bool StartCaptureService()
 		{
+			bool success;
 			var serviceConfig = GetRedirectedServiceConfig();
 			var startInfo = CaptureServiceConfiguration
 				.GetServiceStartInfo(serviceConfig.ConfigParameterToArguments());
-			_captureService.StartCaptureService(startInfo);
+			success = _captureService.StartCaptureService(startInfo);
 
 			StartFillArchive();
+
+			return success;
 		}
 
 		private void StartFillArchive()
@@ -735,15 +688,6 @@ namespace CapFrameX.ViewModel
 		{
 			StopFillArchive();
 			_captureService.StopCaptureService();
-		}
-
-		private string GetOutputFilename(string processName)
-		{
-			var filename = CaptureServiceConfiguration.GetCaptureFilename(processName);
-			string observedDirectory = RecordDirectoryObserver
-				.GetInitialObservedDirectory(_appConfiguration.ObservedDirectory);
-
-			return Path.Combine(observedDirectory, filename);
 		}
 
 		private ICaptureServiceConfiguration GetRedirectedServiceConfig()
@@ -790,14 +734,11 @@ namespace CapFrameX.ViewModel
 		private IDisposable GetListUpdatHeartBeat()
 		{
 			var context = SynchronizationContext.Current;
-			return Observable.Generate(0, // dummy initialState
-										x => true, // dummy condition
-										x => x, // dummy iterate
-										x => x, // dummy resultSelector
-										x => TimeSpan.FromSeconds(1))
-										.ObserveOn(context)
-										.SubscribeOn(context)
-										.Subscribe(x => UpdateProcessToCaptureList());
+			return Observable
+				.Timer(DateTimeOffset.UtcNow, TimeSpan.FromSeconds(1))
+				.ObserveOn(context)
+				.SubscribeOn(context)
+				.Subscribe(x => UpdateProcessToCaptureList());
 		}
 
 		private void UpdateProcessToCaptureList()
@@ -808,6 +749,14 @@ namespace CapFrameX.ViewModel
 			var filter = CaptureServiceConfiguration.GetProcessIgnoreList();
 			var processList = _captureService.GetAllFilteredProcesses(filter).Distinct();
 			ProcessesToCapture.AddRange(processList);
+
+			if (ProcessesToCapture.Any() && !string.IsNullOrWhiteSpace(_lastCapturedProcess))
+			{
+				if (!ProcessesToCapture.Contains(_lastCapturedProcess) ||
+					(selectedProcessToCapture != null &&
+					selectedProcessToCapture != _lastCapturedProcess))
+					_overlayService.ResetHistory();
+			}
 
 			// fire update global hook if new process is detected
 			if (backupProcessList.Count != ProcessesToCapture.Count)
@@ -836,12 +785,21 @@ namespace CapFrameX.ViewModel
 			if (string.IsNullOrWhiteSpace(SelectedProcessToCapture))
 			{
 				if (!ProcessesToCapture.Any())
+				{ 
 					CaptureStateInfo = "Process list clear." + Environment.NewLine + $"Start any game / application and press  {CaptureHotkeyString} to start capture.";
+					_overlayService.SetCaptureServiceStatus("Scanning for process...");
+				}
 				else if (ProcessesToCapture.Count == 1)
+				{ 
 					CaptureStateInfo = "Process auto-detected." + Environment.NewLine + $"Press {CaptureHotkeyString} to start capture.";
+					_overlayService.SetCaptureServiceStatus("Ready to capture...");
+				}
 				else if (ProcessesToCapture.Count > 1)
+				{ 
 					//Multiple processes detected, select the one to capture or move unwanted processes to ignore list.
 					CaptureStateInfo = "Multiple processes detected." + Environment.NewLine + "Select one or move unwanted processes to ignore list.";
+					_overlayService.SetCaptureServiceStatus("Multiple processes detected");
+				}
 				return;
 			}
 
