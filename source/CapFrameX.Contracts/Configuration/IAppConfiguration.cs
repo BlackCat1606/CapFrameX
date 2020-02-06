@@ -9,6 +9,7 @@
 		string ObservedDirectory { get; set; }
 
 		string ScreenshotDirectory { get; set; }
+		string LoggingDirectory { get; set; }
 
 		int FpsValuesRoundingDigits { get; set; }
 
@@ -106,5 +107,6 @@
 
 		int OutlierPercentageAggregation { get; set; }
 
+		bool AreThresholdsReversed { get; set; }
 	}
 }

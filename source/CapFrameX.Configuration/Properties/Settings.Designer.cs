@@ -658,5 +658,29 @@ namespace CapFrameX.Configuration.Properties {
                 this["OutlierPercentageAggregation"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool AreThresholdsReversed {
+            get {
+                return ((bool)(this["AreThresholdsReversed"]));
+            }
+            set {
+                this["AreThresholdsReversed"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("MyDocuments\\CapFrameX\\Logs")]
+        public string LoggingDirectory {
+            get {
+                return ((string)(this["LoggingDirectory"]));
+            }
+            set {
+                this["LoggingDirectory"] = value;
+            }
+        }
     }
 }

@@ -164,5 +164,11 @@
     <Setting Name="OutlierPercentageAggregation" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">3</Value>
     </Setting>
+    <Setting Name="AreThresholdsReversed" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="LoggingDirectory" Type="System.String" Scope="User">
+      <Value Profile="(Default)">MyDocuments\CapFrameX\Logs</Value>
+    </Setting>
   </Settings>
 </SettingsFile>
