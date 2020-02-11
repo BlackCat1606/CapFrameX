@@ -2,7 +2,6 @@
 using CapFrameX.Contracts.Data;
 using CapFrameX.Contracts.Overlay;
 using CapFrameX.Contracts.PresentMonInterface;
-using CapFrameX.Data;
 using CapFrameX.EventAggregation.Messages;
 using CapFrameX.Hotkey;
 using CapFrameX.PresentMonInterface;
@@ -18,7 +17,6 @@ using Prism.Regions;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.IO;
 using System.Linq;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
@@ -288,7 +286,8 @@ namespace CapFrameX.ViewModel
 			ResetCaptureProcessCommand = new DelegateCommand(OnResetCaptureProcess);
 
 			_logger.LogDebug("{viewName} Ready", this.GetType().Name);
-			CaptureStateInfo = "Service ready..." + Environment.NewLine + $"Press {CaptureHotkeyString} to start capture of the running process.";
+			CaptureStateInfo = "Service ready..." + Environment.NewLine + 
+				$"Press {CaptureHotkeyString} to start capture of the running process.";
 			SelectedSoundMode = _appConfiguration.HotkeySoundMode;
 			CaptureTimeString = _appConfiguration.CaptureTime.ToString();
 
@@ -410,9 +409,9 @@ namespace CapFrameX.ViewModel
 			if (!CXHotkey.IsValidHotkey(CaptureHotkeyString))
 				return;
 
-			var onCombinationDictionary = new Dictionary<Combination, Action>
+			var onCombinationDictionary = new Dictionary<CXHotkeyCombination, Action>
 			{
-				{Combination.FromString(CaptureHotkeyString), () =>
+				{CXHotkeyCombination.FromString(CaptureHotkeyString), () =>
 				{
 					if(!_dataOffsetRunning)
 						SetCaptureMode();
@@ -420,7 +419,7 @@ namespace CapFrameX.ViewModel
 			};
 
 			_globalCaptureHookEvent = Hook.GlobalEvents();
-			_globalCaptureHookEvent.OnCombination(onCombinationDictionary);
+			_globalCaptureHookEvent.OnCXCombination(onCombinationDictionary);
 		}
 
 		private void SetCaptureMode()
