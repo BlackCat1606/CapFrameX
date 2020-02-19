@@ -156,7 +156,7 @@
                 </Grid>
 				<Grid Grid.Column="1" Background="#F5F5F5" Margin="5 5 0 0">
 				</Grid>
-                <!--FPS thresholds and stuttering analysis-->
+                <!--stuttering analysis, FPS thresholds and sensor statistics-->
 				<Grid Grid.Column="2" Margin="5 5 0 0" >
                     <TabControl Background="#F5F5F5" >
                         <TabItem Header="Stuttering analysis">
@@ -202,6 +202,49 @@
                                     </lvc:CartesianChart.AxisY>
                                 </lvc:CartesianChart>
                             </Grid>
+                        </TabItem>
+                        <TabItem Header="Sensor statistics">
+                            <StackPanel Margin="0 10 0 0" HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="30"></RowDefinition>
+                                    <RowDefinition Height="30"></RowDefinition>
+                                    <RowDefinition Height="30"></RowDefinition>
+                                    <RowDefinition Height="30"></RowDefinition>
+                                    </Grid.RowDefinitions>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="145"></ColumnDefinition> 
+                                    <ColumnDefinition Width="30"></ColumnDefinition>
+                                    <ColumnDefinition Width="50"></ColumnDefinition>
+                                    <ColumnDefinition Width="100"></ColumnDefinition>
+                                    <ColumnDefinition Width="55"></ColumnDefinition>
+                                </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Row="0" Grid.Column="0" HorizontalAlignment="Left"
+                                    Text="Avg. CPU load:"/>
+                                    <TextBlock Grid.Row="1" Grid.Column="0" HorizontalAlignment="Left"
+                                    Text="Avg. CPU max. thread load:"/>
+                                    <TextBlock Grid.Row="2" Grid.Column="0" HorizontalAlignment="Left"
+                                    Text="Avg. GPU load:"/>
+                                    <TextBlock Grid.Row="3" Grid.Column="0" HorizontalAlignment="Left"
+                                    Text="Avg. GPU power:"/>
+                                    <TextBlock Grid.Row="0" Grid.Column="3" HorizontalAlignment="Left"
+                                    Text="Max. RAM usage:"/>
+                                    <TextBlock Grid.Row="1" Grid.Column="3" HorizontalAlignment="Left"
+                                    Text="GPU TDP Limit:"/>
+                                    <TextBlock Grid.Row="0" Grid.Column="1" HorizontalAlignment="Right"
+                                               Text="{Binding CPUUsageStatistic}"/>
+                                    <TextBlock Grid.Row="1" Grid.Column="1" HorizontalAlignment="Right"
+                                               Text="{Binding MaxThreadStatistic}"/>
+                                    <TextBlock Grid.Row="2" Grid.Column="1" HorizontalAlignment="Right"
+                                               Text="{Binding CPUUsageStatistic}"/>
+                                    <TextBlock Grid.Row="3" Grid.Column="1" HorizontalAlignment="Right"
+                                               Text="{Binding GPUPowerStatistic}"/>
+                                    <TextBlock Grid.Row="0" Grid.Column="4" HorizontalAlignment="Right"
+                                               Text="{Binding MaxRAMUsageStatistic}"/>
+                                    <TextBlock Grid.Row="1" Grid.Column="4" HorizontalAlignment="Right"
+                                               Text="{Binding GPUTDPLimitStatistic}"/>
+                            </Grid>
+                            </StackPanel>
                         </TabItem>
                     </TabControl>
 				</Grid>
@@ -310,6 +353,51 @@
 							</materialDesign:Card>
 						</materialDesign:PopupBox>
 					</StackPanel>
+                <StackPanel Grid.Column="1" Margin="50 8 0 8" Orientation="Horizontal">
+                    <TextBlock VerticalAlignment="Center">Additional graphs:</TextBlock>
+                    <materialDesign:PopupBox StaysOpen="True" ToolTipService.ShowDuration="25000">
+                        <materialDesign:PopupBox.ToolTip>
+                            <ToolTip MaxWidth="275" Placement="Top">
+                                <TextBlock Text="Show additional graphs for CPU and GPU load" 
+										   TextWrapping="Wrap"/>
+                            </ToolTip>
+                        </materialDesign:PopupBox.ToolTip>
+                        <materialDesign:Card Width="220" Margin="0 0 0 -10">
+                            <StackPanel>
+                                <Grid Margin="8 8 8 8">
+                                    <Grid.Resources>
+                                        <Style TargetType="CheckBox"
+											BasedOn="{StaticResource MaterialDesignCheckBox}">
+                                            <Setter Property="Margin" Value="8,8,10,8" />
+                                        </Style>
+                                        <Style TargetType="TextBox" BasedOn="{StaticResource MaterialDesignTextBox}">
+                                            <Setter Property="materialDesign:HintAssist.IsFloating" Value="True" />
+                                            <Setter Property="Margin" Value="8,8,8,8" />
+                                        </Style>
+                                    </Grid.Resources>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="*" />
+                                        <RowDefinition Height="*" />
+                                        <RowDefinition Height="*" />
+                                        <RowDefinition Height="*" />
+                                    </Grid.RowDefinitions>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Margin="5" Grid.Row="0" Grid.Column="0" Text="CPU usage" VerticalAlignment="Center"/>
+                                    <ToggleButton Margin="5" Grid.Row="0" Grid.Column="1" IsChecked="{Binding ShowCPUUsageGraph}" Style="{StaticResource MaterialDesignSwitchToggleButton}" ToolTip="Show CPU usage graph" />
+                                    <TextBlock Margin="5" Grid.Row="1" Grid.Column="0" Text="Max. thread usage" VerticalAlignment="Center"/>
+                                    <ToggleButton Margin="5" Grid.Row="1" Grid.Column="1" IsChecked="{Binding ShowMaxThreadUsageGraph}" Style="{StaticResource MaterialDesignSwitchToggleButton}" ToolTip="Show max CPU thread usage graph" />
+                                    <TextBlock Margin="5" Grid.Row="2" Grid.Column="0" Text="GPU usage" VerticalAlignment="Center"/>
+                                    <ToggleButton Margin="5" Grid.Row="2" Grid.Column="1" IsChecked="{Binding ShowGPUUsageGraph}" Style="{StaticResource MaterialDesignSwitchToggleButton}" ToolTip="Show GPU usage graph" />
+                                    <TextBlock Margin="5" Grid.Row="3" Grid.Column="0" Text="RAM usage" VerticalAlignment="Center"/>
+                                    <ToggleButton Margin="5" Grid.Row="3" Grid.Column="1" IsChecked="{Binding ShowRAMUsagedGraph}" Style="{StaticResource MaterialDesignSwitchToggleButton}" ToolTip="Show RAM usage graph" />
+                                </Grid>
+                            </StackPanel>
+                        </materialDesign:Card>
+                    </materialDesign:PopupBox>
+                </StackPanel>
                 <Grid Grid.Column="3" HorizontalAlignment="Right">
                    <StackPanel  Margin="0 0 0 0" VerticalAlignment="Center" Orientation="Horizontal">
                         <TextBlock Text="Remove outliers:"/>
